@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    tools:context=".MainActivity">
+
+    <Button
+        android:id="@+id/btn_TurnOn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Bluetooth TurnOn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/btn_BT_Client"/>
+
+    <Button
+        android:id="@+id/btn_BT_Client"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="BT_Client"
+        android:enabled="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_TurnOn"
+        app:layout_constraintBottom_toTopOf="@+id/btn_BT_Server"/>
+
+    <Button
+        android:id="@+id/btn_BT_Server"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="BT_Server"
+        android:enabled="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_BT_Client"
+        app:layout_constraintBottom_toTopOf="@+id/btn_BLE_Client"/>
+
+    <Button
+        android:id="@+id/btn_BLE_Client"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="BLE_Client"
+        android:enabled="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_BT_Server"
+        app:layout_constraintBottom_toTopOf="@+id/btn_BLE_Server"/>
+
+    <Button
+        android:id="@+id/btn_BLE_Server"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="BLE_Server"
+        android:enabled="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_BLE_Client"
+        app:layout_constraintBottom_toTopOf="@+id/btn_TurnOff"/>
+
+    <Button
+        android:id="@+id/btn_TurnOff"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Bluetooth TurnOff"
+        android:enabled="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_BLE_Server"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

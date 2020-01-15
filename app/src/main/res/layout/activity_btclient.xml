@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".BTClientActivity">
+
+    <Button
+        android:id="@+id/btn_startscan"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Start scan"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btn_stopscan"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/recyclerViewScanDevice"/>
+
+    <Button
+        android:id="@+id/btn_stopscan"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Stop scan"
+        app:layout_constraintStart_toEndOf="@id/btn_startscan"
+        app:layout_constraintEnd_toStartOf="@+id/btn_rescan"
+        app:layout_constraintTop_toTopOf="@id/btn_startscan"
+        app:layout_constraintBottom_toBottomOf="@id/btn_startscan"/>
+
+    <Button
+        android:id="@+id/btn_rescan"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Rescan"
+        app:layout_constraintStart_toEndOf="@id/btn_stopscan"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btn_startscan"
+        app:layout_constraintBottom_toBottomOf="@id/btn_startscan"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewScanDevice"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_startscan"
+        app:layout_constraintBottom_toBottomOf="@id/guideline"
+        tools:listitem="@layout/cell_btclient"/>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5"/>
+
+    <EditText
+        android:id="@+id/edit_BTClient_MsgInput"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="請輸入訊息"
+        android:textColorHint="@android:color/darker_gray"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/ImageBtn_BTClient_Send"
+        app:layout_constraintTop_toBottomOf="@id/guideline"/>
+
+    <ImageButton
+        android:id="@+id/ImageBtn_BTClient_Send"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:src="@android:drawable/ic_menu_send"
+        app:layout_constraintBottom_toBottomOf="@id/edit_BTClient_MsgInput"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/edit_BTClient_MsgInput"
+        app:layout_constraintTop_toTopOf="@id/edit_BTClient_MsgInput" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewMsg_BTClient"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/edit_BTClient_MsgInput"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:listitem="@layout/cell_msg"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

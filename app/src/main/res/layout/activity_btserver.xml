@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".BTServerActivity">
+
+    <TextView
+        android:id="@+id/textView_BTServer_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="等待連線"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <EditText
+        android:id="@+id/edit_BTServer_MsgInput"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="請輸入訊息"
+        android:textColorHint="@android:color/darker_gray"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/ImageBtn_BTServer_Send"
+        app:layout_constraintTop_toBottomOf="@id/textView_BTServer_status"
+        app:layout_constraintBottom_toTopOf="@id/recyclerViewMsg_BTServer"/>
+
+    <ImageButton
+        android:id="@+id/ImageBtn_BTServer_Send"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:src="@android:drawable/ic_menu_send"
+        app:layout_constraintBottom_toBottomOf="@id/edit_BTServer_MsgInput"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/edit_BTServer_MsgInput"
+        app:layout_constraintTop_toTopOf="@id/edit_BTServer_MsgInput" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewMsg_BTServer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/edit_BTServer_MsgInput"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
