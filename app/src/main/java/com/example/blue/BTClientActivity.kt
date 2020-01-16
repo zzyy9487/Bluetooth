@@ -1,7 +1,9 @@
 package com.example.blue
 
+import android.bluetooth.BluetoothA2dp
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothProfile
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -10,10 +12,13 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.ParcelUuid
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.core.view.get
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.blue.btclient.MsgBTClientAdapter
 import com.example.blue.btclient.ScanBTDeviceAdapter
 import kotlinx.android.synthetic.main.activity_btclient.*
+import kotlinx.android.synthetic.main.cell_btclient.view.*
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
@@ -25,7 +30,6 @@ class BTClientActivity : AppCompatActivity() {
     var receiver: BroadcastReceiver? = null
     lateinit var scanAdapter:ScanBTDeviceAdapter
     lateinit var msgAdapter:MsgBTClientAdapter
-//    val MSG:Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,15 +51,34 @@ class BTClientActivity : AppCompatActivity() {
                     BluetoothDevice.ACTION_FOUND ->{
                         scanAdapter.addBT(dev)
                     }
-                }
+                    BluetoothDevice.ACTION_ACL_CONNECTED ->{
+                        runOnUiThread{
+                            textView_BTClient_status.text = dev.name + "(已連接)" + dev.address
+                        }
+                    }
+                    BluetoothDevice.ACTION_ACL_DISCONNECTED ->{
+                        runOnUiThread{
+                            textView_BTClient_status.text =  "尚未連接"
+                        }
+                    }
+                    BluetoothDevice.ACTION_BOND_STATE_CHANGED ->{
+                        runOnUiThread{
+                            scanAdapter.notifyDataSetChanged()
+                        }
+                    }
 
+                }
             }
         }
 
+        val filter = IntentFilter()
+        filter.addAction(BluetoothDevice.ACTION_FOUND)
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
+        filter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED)
+        registerReceiver(receiver, filter)
+
         btn_startscan.setOnClickListener {
-            val filter = IntentFilter()
-            filter.addAction(BluetoothDevice.ACTION_FOUND)
-            registerReceiver(receiver, filter)
             scanAdapter.addBondedBT()
             BluetoothAdapter.getDefaultAdapter().startDiscovery()
         }
@@ -66,78 +89,89 @@ class BTClientActivity : AppCompatActivity() {
 
         btn_rescan.setOnClickListener {
             scanAdapter.myDevices.clear()
-            val filter = IntentFilter()
-            filter.addAction(BluetoothDevice.ACTION_FOUND)
-            registerReceiver(receiver, filter)
             scanAdapter.addBondedBT()
             BluetoothAdapter.getDefaultAdapter().startDiscovery()
         }
 
         scanAdapter.setClickListener(object :ScanBTDeviceAdapter.OnClickListener{
-            override fun bondedDevice(bonuedDev: BluetoothDevice) {
 
-                try {
-                    BluetoothAdapter.getDefaultAdapter().cancelDiscovery()
-                    var bonding = true
-                    Thread{
-                        while (bonding){
-                            if (bonuedDev.bondState == 12){
-                                runOnUiThread{
-                                    scanAdapter.notifyDataSetChanged()
+            override fun bondorconnect(dev: BluetoothDevice, position:Int) {
+                AlertDialog.Builder(this@BTClientActivity)
+                    .setTitle(dev.name)
+                    .setMessage(dev.address)
+                    .setNeutralButton("取消") { dialog, which ->
+                        BluetoothAdapter.getDefaultAdapter().cancelDiscovery()
+                    }
+                    .setNegativeButton("配對") { dialog, which ->
+                        if (dev.bondState == 10){
+                            BluetoothAdapter.getDefaultAdapter().cancelDiscovery()
+                            dev.createBond()
+                            var pairing = true
+                            Thread{
+                                while (pairing){
+                                    if (dev.bondState == 12){
+                                        try {
+                                            runOnUiThread {
+                                                scanAdapter.notifyItemChanged(position)
+                                            }
+                                            pairing = false
+                                        } catch (e:Throwable){
+
+                                        }
+
+                                    }
                                 }
-                                bonding = false
-                            }
-                        }
-                    }.start()
-                    bonuedDev.createBond()
-                } catch (e:IOException){
-
-                }
-
-            }
-
-            override fun connectToDevice(connectDev: BluetoothDevice, position:Int) {
-
-                BluetoothAdapter.getDefaultAdapter().cancelDiscovery()
-                try {
-                    val socket = connectDev.createRfcommSocketToServiceRecord(getUUID())
-                    socket.connect()
-                    val connecting = true
-                    Thread{
-                        while (connecting){
-
+                            }.start()
+                        } else if (dev.bondState == 12){
+                            Toast.makeText(this@BTClientActivity, "this device paired...", Toast.LENGTH_LONG).show()
                         }
                     }
-
-                    ImageBtn_BTClient_Send.setOnClickListener {
-                        if (!socket.isConnected) return@setOnClickListener
-                        val string :String = edit_BTClient_MsgInput.text.toString()
-                        val dataOutput =DataOutputStream(socket.outputStream)
+                    .setPositiveButton("連線") { dialog, which ->
+                        BluetoothAdapter.getDefaultAdapter().cancelDiscovery()
                         try {
-//                            dataOutput.writeInt(MSG)
-                            dataOutput.writeUTF(string)
-                            dataOutput.flush()
-                        } catch (e:IOException){
+                            val socket = dev.createRfcommSocketToServiceRecord(getUUID())
+                            socket.connect()
 
-                        }
-                    }
-
-                    Thread{
-                        while (connecting){
-                            if (!socket.isConnected) socket.connect()
-                            val dataInput = DataInputStream(socket.inputStream)
-                            val toastWord :String? = dataInput.readUTF().toString()
-                            runOnUiThread{
-                                if (!toastWord.isNullOrEmpty()) Toast.makeText(this@BTClientActivity, toastWord, Toast.LENGTH_SHORT).show()
-                                    msgAdapter.addMSG(toastWord)
-                                    msgAdapter.notifyDataSetChanged()
+                            runOnUiThread {
+                                textView_BTClient_status.text = dev.name + "(已連接)" + dev.address
                             }
+
+                            val connecting = true
+
+                            ImageBtn_BTClient_Send.setOnClickListener {
+                                if (!socket.isConnected) return@setOnClickListener
+                                val string :String = edit_BTClient_MsgInput.text.toString()
+                                val dataOutput = DataOutputStream(socket.outputStream)
+                                try {
+                                    dataOutput.writeInt(0)
+                                    dataOutput.writeUTF(string)
+                                    dataOutput.flush()
+                                } catch (e:IOException){
+
+                                }
+                            }
+
+                            Thread{
+                                while (connecting){
+                                    if (!socket.isConnected) socket.connect()
+                                    val dataInput = DataInputStream(socket.inputStream)
+                                    try {
+                                        val toastWord :String? = dataInput.readUTF().toString()
+                                        runOnUiThread{
+                                            if (!toastWord.isNullOrEmpty()) Toast.makeText(this@BTClientActivity, toastWord, Toast.LENGTH_SHORT).show()
+                                            msgAdapter.addMSG(toastWord)
+                                            msgAdapter.notifyDataSetChanged()
+                                        }
+                                    } catch (e:Throwable) {
+
+                                    }
+                                }
+                            }.start()
+
+                        } catch (e:Throwable){
+
                         }
-                    }.start()
-                } catch (e:IOException){
-
-                }
-
+                    }.show()
             }
         })
 

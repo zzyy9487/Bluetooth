@@ -1,6 +1,11 @@
 package com.example.blue
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.ParcelUuid
@@ -17,6 +22,7 @@ import java.util.*
 class BTServerActivity : AppCompatActivity() {
 
     lateinit var msgAdapter: MsgBTServerAdapter
+    var receiver: BroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +34,31 @@ class BTServerActivity : AppCompatActivity() {
 
         val uuid = getUUID()
 
+        receiver = object :BroadcastReceiver(){
+            override fun onReceive(context: Context?, intent: Intent) {
+                val action = intent.action ?: return
+                val dev = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE) ?: return
+                when(action){
+                    BluetoothDevice.ACTION_ACL_CONNECTED ->{
+                        runOnUiThread{
+                            textView_BTServer_status.setText(dev.name + "(已連接)" + dev.address)
+                        }
+                    }
+                    BluetoothDevice.ACTION_ACL_DISCONNECTED ->{
+                        runOnUiThread{
+                            textView_BTServer_status.text =  "尚未連接"
+                        }
+                    }
+
+                }
+            }
+        }
+
+        val filter = IntentFilter()
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
+        registerReceiver(receiver, filter)
+
         Thread{
             try {
                 while (true){
@@ -37,17 +68,13 @@ class BTServerActivity : AppCompatActivity() {
                         val mySocket = BluetoothAdapter.getDefaultAdapter().listenUsingInsecureRfcommWithServiceRecord("XDDD", uuid)
                         val socket = mySocket.accept()
                         mySocket.close()
-                        var socketisconnecting = true
-
-                        runOnUiThread{
-                            textView_BTServer_status.text = "${socket.remoteDevice.name}(已連接)(${socket.remoteDevice.address})"
-                        }
 
                         ImageBtn_BTServer_Send.setOnClickListener {
                             if (!socket.isConnected) return@setOnClickListener
                             val string :String = edit_BTServer_MsgInput.text.toString()
                             val dataOutput = DataOutputStream(socket.outputStream)
                             try {
+                                dataOutput.writeInt(0)
                                 dataOutput.writeUTF(string)
                                 dataOutput.flush()
                             } catch (e: IOException){
@@ -55,27 +82,25 @@ class BTServerActivity : AppCompatActivity() {
                             }
                         }
 
-                        while (socketisconnecting){
-                            val dataInput = DataInputStream(socket.inputStream)
-                            val toastWord :String? = dataInput.readUTF().toString()
+                        val connecting = true
 
-                            if (!toastWord.isNullOrEmpty()){
-                                runOnUiThread{
-                                    Toast.makeText(this@BTServerActivity, toastWord, Toast.LENGTH_SHORT).show()
-                                    msgAdapter.addMSG(toastWord)
-                                    msgAdapter.notifyDataSetChanged()
+                        Thread{
+                            while (connecting){
+                                if (!socket.isConnected) socket.connect()
+                                val dataInput = DataInputStream(socket.inputStream)
+                                try {
+                                    val toastWord :String? = dataInput.readUTF().toString()
+                                    runOnUiThread{
+                                        if (!toastWord.isNullOrEmpty()) Toast.makeText(this@BTServerActivity, toastWord, Toast.LENGTH_SHORT).show()
+                                        msgAdapter.addMSG(toastWord)
+                                        msgAdapter.notifyDataSetChanged()
+                                    }
+                                } catch (e:Throwable) {
+
                                 }
                             }
+                        }.start()
 
-                            if (!socket.isConnected) {
-                                runOnUiThread{
-                                    textView_BTServer_status.text = "斷線等待連線ing..."
-                                }
-                                socketisconnecting = false
-                                mySocketOk = false
-                            }
-
-                        }
                     }
                 }
 
@@ -100,4 +125,10 @@ class BTServerActivity : AppCompatActivity() {
         }
         return uuid
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(receiver)
+    }
+
 }
