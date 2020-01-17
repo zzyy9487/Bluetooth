@@ -30,6 +30,10 @@ class BTClientActivity : AppCompatActivity() {
     var receiver: BroadcastReceiver? = null
     lateinit var scanAdapter:ScanBTDeviceAdapter
     lateinit var msgAdapter:MsgBTClientAdapter
+    lateinit var threadRead:Thread
+    lateinit var threadBonded: Thread
+    var threadReadBoolean = true
+    var threadBondedBoolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,22 +110,22 @@ class BTClientActivity : AppCompatActivity() {
                         if (dev.bondState == 10){
                             BluetoothAdapter.getDefaultAdapter().cancelDiscovery()
                             dev.createBond()
-                            var pairing = true
-                            Thread{
-                                while (pairing){
+                            threadBonded = Thread{
+                                while (threadBondedBoolean){
                                     if (dev.bondState == 12){
                                         try {
                                             runOnUiThread {
                                                 scanAdapter.notifyItemChanged(position)
                                             }
-                                            pairing = false
-                                        } catch (e:Throwable){
+                                            threadBondedBoolean = false
+                                            threadBonded.interrupt()
+                                        } catch (e:Exception){
 
                                         }
-
                                     }
                                 }
-                            }.start()
+                            }
+                            threadBonded.start()
                         } else if (dev.bondState == 12){
                             Toast.makeText(this@BTClientActivity, "this device paired...", Toast.LENGTH_LONG).show()
                         }
@@ -132,18 +136,11 @@ class BTClientActivity : AppCompatActivity() {
                             val socket = dev.createRfcommSocketToServiceRecord(getUUID())
                             socket.connect()
 
-                            runOnUiThread {
-                                textView_BTClient_status.text = dev.name + "(已連接)" + dev.address
-                            }
-
-                            val connecting = true
-
                             ImageBtn_BTClient_Send.setOnClickListener {
                                 if (!socket.isConnected) return@setOnClickListener
                                 val string :String = edit_BTClient_MsgInput.text.toString()
                                 val dataOutput = DataOutputStream(socket.outputStream)
                                 try {
-                                    dataOutput.writeInt(0)
                                     dataOutput.writeUTF(string)
                                     dataOutput.flush()
                                 } catch (e:IOException){
@@ -151,8 +148,8 @@ class BTClientActivity : AppCompatActivity() {
                                 }
                             }
 
-                            Thread{
-                                while (connecting){
+                            threadRead = Thread{
+                                while (threadReadBoolean){
                                     if (!socket.isConnected) socket.connect()
                                     val dataInput = DataInputStream(socket.inputStream)
                                     try {
@@ -162,13 +159,14 @@ class BTClientActivity : AppCompatActivity() {
                                             msgAdapter.addMSG(toastWord)
                                             msgAdapter.notifyDataSetChanged()
                                         }
-                                    } catch (e:Throwable) {
+                                    } catch (e:IOException) {
 
                                     }
                                 }
-                            }.start()
+                            }
+                            threadRead.start()
 
-                        } catch (e:Throwable){
+                        } catch (e:IOException){
 
                         }
                     }.show()
@@ -218,6 +216,7 @@ class BTClientActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        threadReadBoolean = false
         timer.cancel()
     }
 

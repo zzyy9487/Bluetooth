@@ -23,6 +23,10 @@ class BTServerActivity : AppCompatActivity() {
 
     lateinit var msgAdapter: MsgBTServerAdapter
     var receiver: BroadcastReceiver? = null
+    lateinit var threadSocket:Thread
+    lateinit var threadRead:Thread
+    var threadSocketBoolean = true
+    var threadReadBoolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,8 +35,6 @@ class BTServerActivity : AppCompatActivity() {
         msgAdapter = MsgBTServerAdapter()
         recyclerViewMsg_BTServer.layoutManager = LinearLayoutManager(this)
         recyclerViewMsg_BTServer.adapter = msgAdapter
-
-        val uuid = getUUID()
 
         receiver = object :BroadcastReceiver(){
             override fun onReceive(context: Context?, intent: Intent) {
@@ -49,32 +51,32 @@ class BTServerActivity : AppCompatActivity() {
                             textView_BTServer_status.text =  "尚未連接"
                         }
                     }
+                    BluetoothDevice.ACTION_BOND_STATE_CHANGED ->{
+                        Toast.makeText(this@BTServerActivity, dev.bondState.toString(), Toast.LENGTH_LONG).show()
+                    }
 
                 }
             }
         }
 
-        val filter = IntentFilter()
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
-        registerReceiver(receiver, filter)
+        val uuid = getUUID()
 
-        Thread{
+        threadSocket = Thread{
             try {
-                while (true){
+                while (threadSocketBoolean){
                     var mySocketOk = true
 
                     while (mySocketOk){
                         val mySocket = BluetoothAdapter.getDefaultAdapter().listenUsingInsecureRfcommWithServiceRecord("XDDD", uuid)
                         val socket = mySocket.accept()
                         mySocket.close()
+                        var socketisconnecting = true
 
                         ImageBtn_BTServer_Send.setOnClickListener {
                             if (!socket.isConnected) return@setOnClickListener
                             val string :String = edit_BTServer_MsgInput.text.toString()
                             val dataOutput = DataOutputStream(socket.outputStream)
                             try {
-                                dataOutput.writeInt(0)
                                 dataOutput.writeUTF(string)
                                 dataOutput.flush()
                             } catch (e: IOException){
@@ -82,25 +84,21 @@ class BTServerActivity : AppCompatActivity() {
                             }
                         }
 
-                        val connecting = true
-
-                        Thread{
-                            while (connecting){
-                                if (!socket.isConnected) socket.connect()
+                        threadRead = Thread{
+                            while (socketisconnecting){
                                 val dataInput = DataInputStream(socket.inputStream)
-                                try {
-                                    val toastWord :String? = dataInput.readUTF().toString()
+                                val toastWord :String? = dataInput.readUTF().toString()
+
+                                if (!toastWord.isNullOrEmpty()){
                                     runOnUiThread{
-                                        if (!toastWord.isNullOrEmpty()) Toast.makeText(this@BTServerActivity, toastWord, Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(this@BTServerActivity, toastWord, Toast.LENGTH_SHORT).show()
                                         msgAdapter.addMSG(toastWord)
                                         msgAdapter.notifyDataSetChanged()
                                     }
-                                } catch (e:Throwable) {
-
                                 }
                             }
-                        }.start()
-
+                        }
+                        threadRead.start()
                     }
                 }
 
@@ -108,7 +106,16 @@ class BTServerActivity : AppCompatActivity() {
 
             }
 
-        }.start()
+        }
+        threadSocket.start()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val filter = IntentFilter()
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
+        registerReceiver(receiver, filter)
     }
 
     fun getUUID(): UUID {
@@ -124,6 +131,12 @@ class BTServerActivity : AppCompatActivity() {
             e.printStackTrace()
         }
         return uuid
+    }
+
+    override fun onPause() {
+        super.onPause()
+        threadReadBoolean = false
+        threadSocketBoolean = false
     }
 
     override fun onDestroy() {

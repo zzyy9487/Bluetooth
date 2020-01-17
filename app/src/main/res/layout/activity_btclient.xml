@@ -53,6 +53,16 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.5"/>
 
+    <TextView
+        android:id="@+id/textView_BTClient_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="尚未連線"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/guideline"/>
+
     <EditText
         android:id="@+id/edit_BTClient_MsgInput"
         android:layout_width="0dp"
@@ -61,7 +71,7 @@
         android:textColorHint="@android:color/darker_gray"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/ImageBtn_BTClient_Send"
-        app:layout_constraintTop_toBottomOf="@id/guideline"/>
+        app:layout_constraintTop_toBottomOf="@id/textView_BTClient_status"/>
 
     <ImageButton
         android:id="@+id/ImageBtn_BTClient_Send"
