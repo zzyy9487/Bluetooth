@@ -2,6 +2,7 @@ package com.example.blue
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -25,6 +26,7 @@ class BTServerActivity : AppCompatActivity() {
     var receiver: BroadcastReceiver? = null
     lateinit var threadSocket:Thread
     lateinit var threadRead:Thread
+    var myBluetoothSocket: BluetoothSocket? = null
     var threadSocketBoolean = true
     var threadReadBoolean = true
 
@@ -51,10 +53,6 @@ class BTServerActivity : AppCompatActivity() {
                             textView_BTServer_status.text =  "尚未連接"
                         }
                     }
-                    BluetoothDevice.ACTION_BOND_STATE_CHANGED ->{
-                        Toast.makeText(this@BTServerActivity, dev.bondState.toString(), Toast.LENGTH_LONG).show()
-                    }
-
                 }
             }
         }
@@ -64,12 +62,14 @@ class BTServerActivity : AppCompatActivity() {
         threadSocket = Thread{
             try {
                 while (threadSocketBoolean){
-                    var mySocketOk = true
-
-                    while (mySocketOk){
+//                    var mySocketOk = true
+//
+//                    while (mySocketOk){
                         val mySocket = BluetoothAdapter.getDefaultAdapter().listenUsingInsecureRfcommWithServiceRecord("XDDD", uuid)
                         val socket = mySocket.accept()
+                        BluetoothAdapter.getDefaultAdapter()
                         mySocket.close()
+                        myBluetoothSocket = socket
                         var socketisconnecting = true
 
                         ImageBtn_BTServer_Send.setOnClickListener {
@@ -87,19 +87,22 @@ class BTServerActivity : AppCompatActivity() {
                         threadRead = Thread{
                             while (socketisconnecting){
                                 val dataInput = DataInputStream(socket.inputStream)
-                                val toastWord :String? = dataInput.readUTF().toString()
-
-                                if (!toastWord.isNullOrEmpty()){
-                                    runOnUiThread{
-                                        Toast.makeText(this@BTServerActivity, toastWord, Toast.LENGTH_SHORT).show()
-                                        msgAdapter.addMSG(toastWord)
-                                        msgAdapter.notifyDataSetChanged()
+                                try {
+                                    val toastWord :String? = dataInput.readUTF().toString()
+                                    if (!toastWord.isNullOrEmpty()){
+                                        runOnUiThread{
+                                            Toast.makeText(this@BTServerActivity, toastWord, Toast.LENGTH_SHORT).show()
+                                            msgAdapter.addMSG(toastWord)
+                                        }
                                     }
+                                } catch (e:IOException){
+
                                 }
+
                             }
                         }
                         threadRead.start()
-                    }
+//                    }
                 }
 
             } catch (e:Exception){
@@ -135,6 +138,13 @@ class BTServerActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        try {
+            myBluetoothSocket!!.inputStream.close()
+            myBluetoothSocket!!.outputStream.close()
+            myBluetoothSocket!!.close()
+        } catch (e:IOException){
+
+        }
         threadReadBoolean = false
         threadSocketBoolean = false
     }

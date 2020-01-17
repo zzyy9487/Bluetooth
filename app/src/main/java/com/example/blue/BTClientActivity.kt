@@ -1,9 +1,6 @@
 package com.example.blue
 
-import android.bluetooth.BluetoothA2dp
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothProfile
+import android.bluetooth.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -32,6 +29,7 @@ class BTClientActivity : AppCompatActivity() {
     lateinit var msgAdapter:MsgBTClientAdapter
     lateinit var threadRead:Thread
     lateinit var threadBonded: Thread
+    lateinit var myBluetoothSocket:BluetoothSocket
     var threadReadBoolean = true
     var threadBondedBoolean = true
 
@@ -132,43 +130,41 @@ class BTClientActivity : AppCompatActivity() {
                     }
                     .setPositiveButton("連線") { dialog, which ->
                         BluetoothAdapter.getDefaultAdapter().cancelDiscovery()
+                        val socket = dev.createRfcommSocketToServiceRecord(getUUID())
                         try {
-                            val socket = dev.createRfcommSocketToServiceRecord(getUUID())
                             socket.connect()
-
-                            ImageBtn_BTClient_Send.setOnClickListener {
-                                if (!socket.isConnected) return@setOnClickListener
-                                val string :String = edit_BTClient_MsgInput.text.toString()
-                                val dataOutput = DataOutputStream(socket.outputStream)
-                                try {
-                                    dataOutput.writeUTF(string)
-                                    dataOutput.flush()
-                                } catch (e:IOException){
-
-                                }
-                            }
-
-                            threadRead = Thread{
-                                while (threadReadBoolean){
-                                    if (!socket.isConnected) socket.connect()
-                                    val dataInput = DataInputStream(socket.inputStream)
-                                    try {
-                                        val toastWord :String? = dataInput.readUTF().toString()
-                                        runOnUiThread{
-                                            if (!toastWord.isNullOrEmpty()) Toast.makeText(this@BTClientActivity, toastWord, Toast.LENGTH_SHORT).show()
-                                            msgAdapter.addMSG(toastWord)
-                                            msgAdapter.notifyDataSetChanged()
-                                        }
-                                    } catch (e:IOException) {
-
-                                    }
-                                }
-                            }
-                            threadRead.start()
-
-                        } catch (e:IOException){
+                        } catch (e:Exception){
 
                         }
+                        myBluetoothSocket = socket
+                        ImageBtn_BTClient_Send.setOnClickListener {
+                            if (!socket.isConnected) return@setOnClickListener
+                            val string :String = edit_BTClient_MsgInput.text.toString()
+                            val dataOutput = DataOutputStream(socket.outputStream)
+                            try {
+                                dataOutput.writeUTF(string)
+                                dataOutput.flush()
+                            } catch (e:IOException){
+
+                            }
+                        }
+
+                        threadRead = Thread{
+                            while (threadReadBoolean){
+                                if (!socket.isConnected) socket.connect()
+                                val dataInput = DataInputStream(socket.inputStream)
+                                try {
+                                    val toastWord :String? = dataInput.readUTF().toString()
+                                    runOnUiThread{
+                                        if (!toastWord.isNullOrEmpty()) Toast.makeText(this@BTClientActivity, toastWord, Toast.LENGTH_SHORT).show()
+                                        msgAdapter.addMSG(toastWord)
+                                    }
+                                } catch (e:IOException) {
+
+                                }
+                            }
+                        }
+                        threadRead.start()
                     }.show()
             }
         })
@@ -217,6 +213,9 @@ class BTClientActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         threadReadBoolean = false
+        myBluetoothSocket.inputStream.close()
+        myBluetoothSocket.outputStream.close()
+        myBluetoothSocket.close()
         timer.cancel()
     }
 

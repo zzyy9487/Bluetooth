@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Blue</string>
+    <string name="ble_not_supported">No BLE inside</string>
 </resources>

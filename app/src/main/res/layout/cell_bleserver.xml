@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/constraintLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintTop_toTopOf="parent">
+
+    <ImageView
+        android:id="@+id/imageBLE"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        app:srcCompat="@drawable/ic_bluetooth_black_24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/addressBLE"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+        android:id="@+id/nameBLE"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:text="name"
+        app:layout_constraintStart_toEndOf="@+id/imageBLE"
+        app:layout_constraintTop_toTopOf="@+id/imageBLE" />
+
+    <TextView
+        android:id="@+id/addressBLE"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="address"
+        android:textAlignment="textStart"
+        app:layout_constraintStart_toStartOf="@+id/nameBLE"
+        app:layout_constraintTop_toBottomOf="@id/nameBLE" />
+
+    <TextView
+        android:id="@+id/rssiBLE"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="rssi"
+        android:textAlignment="textStart"
+        app:layout_constraintStart_toStartOf="@+id/nameBLE"
+        app:layout_constraintTop_toBottomOf="@id/addressBLE" />
+
+    <TextView
+        android:id="@+id/scanRecordBLE"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="scanRecord"
+        android:textAlignment="textStart"
+        app:layout_constraintStart_toStartOf="@id/nameBLE"
+        app:layout_constraintTop_toBottomOf="@id/rssiBLE"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
