@@ -3,6 +3,7 @@ package com.example.blue
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.BluetoothLeScanner
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -29,6 +30,7 @@ class BLEServerActivity : AppCompatActivity() {
     var mScanning:Boolean = false
 
     lateinit var blescanAdapter:ScanBLEDeviceAdapter
+    lateinit var bluttoothLeScanner :BluetoothLeScanner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,7 +83,7 @@ class BLEServerActivity : AppCompatActivity() {
 
 
         btn_startscan.setOnClickListener {
-            scanLeDevice(true)
+//            scanLeDevice(true)
         }
 
         btn_stopscan.setOnClickListener {
